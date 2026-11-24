@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aarav Mehta - Resume</title>
+<style>
+  /* Single column, standard fonts, real text only: easy for ATS and PDF text extraction. */
+  @page { size: A4; margin: 9mm 12mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 9.6pt; line-height: 1.22; color: #111;
+         font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }
+  h1 { font-size: 20pt; font-weight: 700; letter-spacing: 0.2px; }
+  .contact { margin-top: 3px; font-size: 9.6pt; color: #222; }
+  h2 { font-size: 10.6pt; font-weight: 700; margin-top: 7px; padding-bottom: 2px; border-bottom: 1px solid #444; }
+  .entry { margin-top: 4px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; }
+  .row b { font-weight: 700; }
+  .muted { color: #333; }
+  ul { margin: 2px 0 0 16px; }
+  li { margin-top: 1px; }
+  p { margin-top: 4px; }
+  .skills p { margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<h1>Aarav Mehta</h1>
+<p class="contact">
+  Pune, Maharashtra, India | +91 98765 43210 | aarav.mehta@example.com |
+  linkedin.com/in/aarav-mehta-example | github.com/aarav-mehta-example
+</p>
+
+<h2>Summary</h2>
+<p>
+  Final-year B.Tech Computer Science student with two software internships, building backend services in
+  Python (Django) and Java (Spring Boot) and frontends in React. Solved 450+ data structures and algorithms
+  problems. Looking for a Software Development Engineer role starting in 2026.
+</p>
+
+<h2>Education</h2>
+<div class="entry">
+  <div class="row"><b>B.Tech in Computer Science and Engineering</b><span>2022 – 2026</span></div>
+  <div class="row"><span>Northfield Institute of Technology, Pune</span><span>CGPA: 8.62 / 10</span></div>
+  <p class="muted">Relevant coursework: Data Structures and Algorithms, Object-Oriented Programming, Database
+  Management Systems, Operating Systems, Computer Networks, Software Engineering, Machine Learning.</p>
+</div>
+<div class="entry">
+  <div class="row"><b>Class XII (CBSE), Science with Mathematics</b><span>2022</span></div>
+  <div class="row"><span>Kendriya Vidyalaya, Pune</span><span>Percentage: 92.4%</span></div>
+</div>
+<div class="entry">
+  <div class="row"><b>Class X (CBSE)</b><span>2020</span></div>
+  <div class="row"><span>Kendriya Vidyalaya, Pune</span><span>Percentage: 94.2%</span></div>
+</div>
+
+<h2>Experience</h2>
+<div class="entry">
+  <div class="row"><b>Software Engineering Intern, Bytecraft Labs Pvt. Ltd., Bengaluru</b><span>May 2025 – Jul 2025</span></div>
+  <ul>
+    <li>Built REST APIs in Django REST Framework for an order-tracking service used by 3 internal teams; added
+        pagination and filtering that cut average response size by 60%.</li>
+    <li>Optimised slow PostgreSQL queries with composite indexes and query rewrites, reducing p95 latency of the
+        orders endpoint from 820 ms to 210 ms.</li>
+    <li>Wrote unit and integration tests with pytest, raising coverage of the service from 48% to 81%.</li>
+    <li>Containerised the service with Docker and set up a GitHub Actions pipeline for tests and image builds.</li>
+  </ul>
+</div>
+<div class="entry">
+  <div class="row"><b>Web Development Intern, Greenleaf Digital Solutions, Pune (Remote)</b><span>Jun 2024 – Aug 2024</span></div>
+  <ul>
+    <li>Developed reusable React components and pages for a client dashboard, using hooks and React Router.</li>
+    <li>Integrated a Node.js and Express backend with MongoDB for user authentication using JWT.</li>
+    <li>Fixed 30+ UI and accessibility issues reported by QA, improving the Lighthouse accessibility score to 96.</li>
+  </ul>
+</div>
+
+<h2>Projects</h2>
+<div class="entry">
+  <div class="row"><b>CampusConnect: Placement Portal</b><span>Django, React, PostgreSQL, Docker</span></div>
+  <ul>
+    <li>Full-stack portal where students apply to campus drives and coordinators shortlist candidates; used by
+        400+ students in a college pilot.</li>
+    <li>Designed a normalised database schema (12 tables) and role-based access control for students,
+        coordinators and recruiters.</li>
+    <li>Added Redis caching for drive listings and Celery tasks for email notifications.</li>
+  </ul>
+</div>
+<div class="entry">
+  <div class="row"><b>Distributed Key-Value Store</b><span>Java, Multithreading, Sockets</span></div>
+  <ul>
+    <li>In-memory key-value store with consistent hashing across 3 nodes, replication and a simple
+        write-ahead log for crash recovery.</li>
+    <li>Handled 15,000 requests per second in local load tests using a thread pool and non-blocking I/O.</li>
+  </ul>
+</div>
+<div class="entry">
+  <div class="row"><b>Resume Screening Assistant</b><span>Python, scikit-learn, Flask</span></div>
+  <ul>
+    <li>Ranks resumes against a job description using TF-IDF and cosine similarity; reached 0.82 precision
+        on a labelled set of 300 resumes.</li>
+  </ul>
+</div>
+
+<h2>Technical Skills</h2>
+<div class="skills">
+  <p><b>Languages:</b> Python, Java, C++, JavaScript, SQL, HTML, CSS</p>
+  <p><b>Frameworks and libraries:</b> Django, Django REST Framework, Spring Boot, React, Node.js, Express, Flask, scikit-learn</p>
+  <p><b>Databases:</b> PostgreSQL, MySQL, MongoDB, Redis</p>
+  <p><b>Tools:</b> Git, GitHub Actions, Docker, Linux, Postman, AWS (EC2, S3)</p>
+  <p><b>Core subjects:</b> Data Structures and Algorithms, OOP, DBMS, Operating Systems, Computer Networks, System Design basics</p>
+</div>
+
+<h2>Certifications</h2>
+<ul>
+  <li>AWS Certified Cloud Practitioner, Amazon Web Services (2025)</li>
+  <li>Data Structures and Algorithms in Java, NPTEL, Elite grade (2024)</li>
+</ul>
+
+<h2>Achievements</h2>
+<ul>
+  <li>Solved 450+ problems on LeetCode (max rating 1780) and 200+ on CodeChef (3-star).</li>
+  <li>Finalist (top 10 of 180 teams), Smart India Hackathon internal round, 2024.</li>
+  <li>Merit scholarship for academic performance, 2023 and 2024.</li>
+</ul>
+
+<h2>Positions of Responsibility</h2>
+<ul>
+  <li>Technical Lead, Coding Club, Northfield Institute of Technology (2024 – 2025): ran weekly DSA sessions
+      for 120+ students and organised two inter-college coding contests.</li>
+</ul>
+
+</body>
+</html>

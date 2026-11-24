@@ -1,0 +1,180 @@
+<!doctype html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeakCV</title>
+
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        // One palette: white paper, ink text, hairline borders and a single deep teal.
+        // The token names are the Material ones the pages already use, so every page picks this up.
+        const ink = "#142022", slate = "#56666A", line = "#DCE2E2", teal = "#0F5257", wash = "#E2EDED";
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background": "#f4f7f7",
+                        "surface": "#f4f7f7",
+                        "surface-bright": "#f4f7f7",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f6f8f8",
+                        "surface-container": "#f1f4f4",
+                        "surface-container-high": "#edf1f1",
+                        "surface-container-highest": "#e4e9e9",
+                        "surface-variant": "#e4e9e9",
+                        "surface-dim": line,
+                        "surface-tint": teal,
+                        "on-background": ink,
+                        "on-surface": ink,
+                        "on-surface-variant": slate,
+                        "outline": "#8a9799",
+                        "outline-variant": line,
+                        "inverse-surface": ink,
+                        "inverse-on-surface": "#f1f4f4",
+
+                        "primary": teal,
+                        "primary-container": teal,
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#cfe3e3",
+                        "primary-fixed": wash,
+                        "primary-fixed-dim": "#b9d3d3",
+                        "on-primary-fixed": "#062b2d",
+                        "on-primary-fixed-variant": "#0b3f42",
+                        "inverse-primary": "#9cc8c8",
+
+                        "secondary": "#4a5d60",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": wash,
+                        "on-secondary-container": "#23393b",
+                        "secondary-fixed": wash,
+                        "secondary-fixed-dim": "#b9d3d3",
+                        "on-secondary-fixed": "#062b2d",
+                        "on-secondary-fixed-variant": "#2c4446",
+
+                        "tertiary": "#8a4b0f",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#f6e7d6",
+                        "on-tertiary-container": "#5a2f05",
+                        "tertiary-fixed": "#f6e7d6",
+                        "tertiary-fixed-dim": "#e8c9a6",
+                        "on-tertiary-fixed": "#2e1600",
+                        "on-tertiary-fixed-variant": "#6b3a0b",
+
+                        "accent": "#c47c12",  // 3.4:1 on white, so it works as a chart mark
+                        "accent-soft": "#fcefd6",
+                        "on-accent": "#5c3a00",
+
+                        "error": "#b3261e",
+                        "on-error": "#ffffff",
+                        "error-container": "#fbe9e7",
+                        "on-error-container": "#7a1610"
+                    },
+                    fontFamily: {
+                        "headline": ["Instrument Sans", "system-ui", "sans-serif"],
+                        "body": ["Instrument Sans", "system-ui", "sans-serif"],
+                        "label": ["Instrument Sans", "system-ui", "sans-serif"]
+                    },
+                    // Tighter corners than the old kit: containers stay calm, pills stay round.
+                    borderRadius: { "lg": "8px", "xl": "10px", "2xl": "12px", "3xl": "14px" },
+                    // Flat: structure comes from hairline borders, not shadows.
+                    boxShadow: { "sm": "none", "DEFAULT": "none", "md": "none", "lg": "none", "xl": "none", "2xl": "none" }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Instrument Sans', system-ui, sans-serif;
+            font-feature-settings: 'tnum' 1;
+            background: #ffffff;
+            color: #142022;
+        }
+
+        h1, h2, h3, .brand-font {
+            font-family: 'Instrument Sans', system-ui, sans-serif;
+            letter-spacing: -0.015em;
+        }
+
+        h1 { letter-spacing: -0.025em; }
+
+        :focus-visible {
+            outline: 2px solid #0F5257;
+            outline-offset: 2px;
+        }
+
+        ::selection { background: #E2EDED; }
+
+        body { background: #f4f7f7; }
+
+        /* No blinking text cursor on things you can't type in (shows up when Chrome's caret
+           browsing, F7, is on). Text fields keep their normal cursor. */
+        body { caret-color: transparent; }
+        input, textarea, [contenteditable="true"], .monaco-editor { caret-color: auto; }
+
+        /* Motion: short and quiet. Colour fades on everything clickable; cards stay still. */
+        a, button, input, select, textarea {
+            transition: color .15s ease, background-color .15s ease, border-color .15s ease,
+                        box-shadow .15s ease, transform .15s ease;
+        }
+        button:not(:disabled):active, a:active { transform: translateY(1px); }
+
+        /* Buttons turn black with white text on hover, everywhere. Menu items, tabs, switches,
+           icon-only buttons and the top-bar dropdowns keep their own quieter hover. */
+        button:not(:disabled):not([role]):not([aria-label]):not([aria-haspopup]):not(.plain):hover,
+        a[class*="rounded-lg"][class*="px-"]:hover,
+        label[class*="rounded-lg"][class*="px-"]:hover {
+            background-color: #000 !important;
+            border-color: #000 !important;
+            color: #fff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px -10px rgba(0, 0, 0, .6);
+        }
+        button:not(:disabled):not([role]):not([aria-label]):not([aria-haspopup]):not(.plain):hover *,
+        a[class*="rounded-lg"][class*="px-"]:hover *,
+        label[class*="rounded-lg"][class*="px-"]:hover * {
+            color: #fff !important;
+        }
+        /* Pages fade in once when opened. */
+        main { animation: page-in .28s ease-out both; }
+        @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        /* Menus ease open. */
+        [role="menu"], [role="listbox"] { animation: menu-in .14s ease-out both; transform-origin: top; }
+        @keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
+        /* Bars and lines grow in on the dashboard. */
+        .grow-x { animation: grow-x .6s ease-out both; transform-origin: left; }
+        @keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        .grow-y { animation: grow-y .5s ease-out both; transform-origin: bottom; transform-box: fill-box; }
+        @keyframes grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+        }
+
+        /* Older class names kept so existing markup still works, now flat. */
+        .bg-primary-gradient, .primary-gradient { background: #0F5257; }
+        .ai-pulse-glow { box-shadow: none; }
+        .ai-pulse-aura { background: none; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+            main, [role="menu"], [role="listbox"], .grow-x, .grow-y { animation: none !important; }
+            button:hover, a:hover, button:active, a:active { transform: none !important; }
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>
