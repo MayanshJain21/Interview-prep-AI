@@ -133,10 +133,13 @@ export default function McqTest() {
                 setAttemptId(`${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
                 setQuestions(response.questions);
                 setPhase('test');
+                if (response.failed_skills?.length) {
+                    alert(`Couldn't generate questions for ${response.failed_skills.join(', ')} this time. The test has the other skills.`);
+                }
             }
         } catch (err) {
             console.error(err);
-            alert("Error generating questions.");
+            alert(err.message || "Error generating questions.");
         } finally {
             setIsLoading(false);
         }

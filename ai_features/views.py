@@ -1,5 +1,7 @@
 import json
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
@@ -34,27 +36,49 @@ def generate_mcqs(request):
 
     context = retrieve_context(request.user.id, f"projects and work experience using {', '.join(skills)}", k=4)
     questions_per_skill = 10
-    total_questions = len(skills) * questions_per_skill
 
-    prompt = f"""
-    Generate exactly {total_questions} multiple-choice questions for an interview.
-    Generate {questions_per_skill} questions for EACH of these skills: {', '.join(skills)}.
+    # One request per skill. Asking for all skills in a single reply (40+ questions) makes the
+    # model fail Groq's JSON validation every time, so each skill gets its own short request.
+    def for_skill(skill):
+        prompt = f"""
+    Generate exactly {questions_per_skill} multiple-choice interview questions on the skill: {skill}.
     Difficulty level: {difficulty}.
     Use the following applicant context if relevant to personalize some questions:
     {context}
-    
-    Output exactly a JSON object with a single key "questions" containing a list of {total_questions} objects. Each object should have:
+
+    Output exactly a JSON object with a single key "questions" containing a list of {questions_per_skill} objects. Each object should have:
     - "question": string
     - "options": list of 4 strings
     - "correct_answer": string (must exactly match one of the options)
-    - "skill": string (exactly one of: {', '.join(skills)}; the skill this question tests)
     """
+        last_error = None
+        for attempt in range(3):  # retries cover a failed JSON check or a free-tier rate limit
+            if attempt:
+                time.sleep(3 * attempt)
+            try:
+                items = ask_llm(prompt, temperature=0.3).get('questions') or []
+                good = [q for q in items if isinstance(q, dict) and isinstance(q.get('options'), list)
+                        and q.get('correct_answer') in q['options']]
+                for q in good:
+                    q['skill'] = skill
+                if good:
+                    return good
+            except Exception as e:
+                last_error = e
+        raise last_error or ValueError(f'No valid questions for {skill}')
 
-    try:
-        result = ask_llm(prompt, temperature=0.3)
-        return Response(result)
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    questions, failed = [], []
+    with ThreadPoolExecutor(max_workers=min(4, len(skills))) as pool:
+        futures = {skill: pool.submit(for_skill, skill) for skill in skills}
+        for skill, fut in futures.items():
+            try:
+                questions.extend(fut.result())
+            except Exception:
+                failed.append(skill)
+
+    if not questions:
+        return Response({"error": "Could not generate questions right now. Please try again."}, status=502)
+    return Response({"questions": questions, "failed_skills": failed})
 
 
 @api_view(['POST'])
