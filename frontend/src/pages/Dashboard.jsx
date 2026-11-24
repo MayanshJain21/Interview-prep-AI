@@ -83,7 +83,9 @@ export default function Dashboard() {
     const dueToday = (roadmap?.items || []).filter((i) => i.status === 'pending' && i.scheduled_date <= todayISO()).length;
     const progress = analytics.roadmap_progress;
     const next = analytics.recommendations?.[0];
-    const nextHref = next ? (linkTo(next.link) || '/learning-path') : hasResume ? '/mcq' : '/resume-upload';
+    // Without a resume nothing else is personalised, so the button always goes to the upload page,
+    // even if practice sessions have already produced recommendations.
+    const nextHref = !hasResume ? '/resume-upload' : next ? (linkTo(next.link) || '/learning-path') : '/mcq';
 
     const stages = [
         { name: 'Resume', done: hasResume },
