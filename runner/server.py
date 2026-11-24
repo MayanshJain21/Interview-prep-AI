@@ -14,7 +14,7 @@ Safety (this is a separate container with no database, volume or secrets except 
     - every request needs "Authorization: Bearer <RUNNER_TOKEN>" (the service refuses to start without one,
       unless RUNNER_ALLOW_NO_TOKEN=1 for local testing)
     - submitted code runs as an unprivileged "sandbox" user, never as the server's user
-    - limits per run: wall-clock and CPU time, number of processes, file size, open files, memory where the
+    - limits per run: wall-clock and CPU time, number of processes (MAX_PROCS, off by default), file size, open files, memory where the
       runtime allows it, and output size
     - at most MAX_CONCURRENT runs at once; request bodies are capped
 """
@@ -37,7 +37,9 @@ MAX_CONCURRENT = int(os.getenv('MAX_CONCURRENT', '4'))
 MAX_BODY = 512 * 1024            # request body
 MAX_OUTPUT = 256 * 1024          # stdout / stderr returned
 MAX_FILE = 16 * 1024 * 1024      # largest file a program may write
-MAX_PROCS = 256                  # processes/threads for the sandbox user (stops fork bombs)
+# Process cap for submitted programs. Linux counts it per user across the whole host, so on shared hosts
+# (Railway) any value can already be used up by others; 0 turns it off (the timeout still kills the group).
+MAX_PROCS = int(os.getenv('MAX_PROCS', '0'))
 MEMORY = 512 * 1024 * 1024       # address-space limit for C, C++ and Python
 GO_CACHE = os.getenv('GOCACHE_DIR', '/var/cache/go-build')
 IS_POSIX = os.name == 'posix'
@@ -83,7 +85,7 @@ def _sandbox_ids():
 SANDBOX = _sandbox_ids()
 
 
-def _limits(seconds, limit_memory):
+def _limits(seconds, limit_memory, limit_procs):
     """Runs in the child just before exec: drop privileges, then cap resources."""
     def apply():
         import resource
@@ -95,14 +97,15 @@ def _limits(seconds, limit_memory):
         resource.setrlimit(resource.RLIMIT_CPU, (seconds + 1, seconds + 2))
         resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_FILE, MAX_FILE))
         resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
-        resource.setrlimit(resource.RLIMIT_NPROC, (MAX_PROCS, MAX_PROCS))
+        if limit_procs and MAX_PROCS > 0:
+            resource.setrlimit(resource.RLIMIT_NPROC, (MAX_PROCS, MAX_PROCS))
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
         if limit_memory:
             resource.setrlimit(resource.RLIMIT_AS, (MEMORY, MEMORY))
     return apply if IS_POSIX else None
 
 
-def _run(cmd, workdir, stdin, seconds, limit_memory, env):
+def _run(cmd, workdir, stdin, seconds, limit_memory, env, limit_procs=True):
     """Run one command with limits. Output goes to files (so the file-size limit also caps it)."""
     out_path, err_path = os.path.join(workdir, '.stdout'), os.path.join(workdir, '.stderr')
     with open(out_path, 'wb') as out, open(err_path, 'wb') as err:
@@ -110,7 +113,7 @@ def _run(cmd, workdir, stdin, seconds, limit_memory, env):
             for path in (out_path, err_path):
                 os.chown(path, *SANDBOX)
         proc = subprocess.Popen(cmd, cwd=workdir, stdin=subprocess.PIPE, stdout=out, stderr=err, env=env,
-                                preexec_fn=_limits(seconds, limit_memory))
+                                preexec_fn=_limits(seconds, limit_memory, limit_procs))
         sig = None
         try:
             proc.communicate(stdin.encode('utf-8', 'replace'), timeout=seconds)
@@ -161,7 +164,8 @@ def execute(body):
         result = {}
         if spec.get('compile'):
             cmd = [part.replace('{file}', filename) for part in spec['compile']]
-            compiled = _run(cmd, workdir, '', int(compile_seconds), False, env)
+            # The compiler is trusted and starts helper processes (cc1plus, go tools), so no process cap here.
+            compiled = _run(cmd, workdir, '', int(compile_seconds), False, env, limit_procs=False)
             result['compile'] = compiled
             if compiled['code'] != 0:
                 return 200, result
