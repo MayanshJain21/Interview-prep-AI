@@ -19,7 +19,8 @@ def get_chroma_class():
     return _chroma_module
 
 def get_chroma_client():
-    db_path = os.path.join(os.getcwd(), 'chroma_db')
+    from django.conf import settings
+    db_path = os.path.join(str(settings.DATA_DIR), 'chroma_db')
     Chroma = get_chroma_class()
     return Chroma(persist_directory=db_path, embedding_function=get_embedding_function())
 

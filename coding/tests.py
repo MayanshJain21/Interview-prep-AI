@@ -302,3 +302,35 @@ class TypedLanguageTests(SimpleTestCase):
     def test_go(self):
         self.check_language('go')
         self.assertEqual(self.run_lang('go', TWO_SUM_CODE['go'])[2][0]['stdout'], 'found')
+
+
+class PistonTokenTests(SimpleTestCase):
+    @patch.dict(os.environ, {'PISTON_URL': 'https://piston.example.com/', 'PISTON_TOKEN': 's3cret'})
+    def test_token_is_sent_with_every_request(self):
+        from .executor import PistonExecutor
+        ok = type('R', (), {'status_code': 200, 'json': lambda self: {'run': {'stdout': 'hi', 'stderr': '', 'code': 0}}})()
+        with patch('coding.executor.requests.post', return_value=ok) as post:
+            PistonExecutor().execute('python', 'print(1)', '')
+        self.assertEqual(post.call_args.kwargs['headers'], {'Authorization': 'Bearer s3cret'})
+        self.assertEqual(post.call_args.args[0], 'https://piston.example.com/api/v2/execute')
+
+    @patch.dict(os.environ, {'PISTON_TOKEN': ''})
+    def test_no_token_no_header(self):
+        from .executor import PistonExecutor
+        self.assertEqual(PistonExecutor().headers, {})
+
+
+class CodeRunnerOffTests(TestCase):
+    @patch.dict(os.environ, {'CODE_EXECUTOR': 'off'})
+    def test_round_does_not_start_and_languages_say_why(self):
+        from django.contrib.auth.models import User
+        from rest_framework.test import APIClient
+        user = User.objects.create_user(username='off@x.com', email='off@x.com', password='pw12345678')
+        api = APIClient()
+        api.force_authenticate(user)
+        with patch('coding.views.generate_round') as generate:
+            res = api.post('/api/coding/session/start/', {'difficulty': 'easy'}, format='json')
+        self.assertEqual((res.status_code, res.data['code']), (503, 'executor_off'))
+        generate.assert_not_called()  # no LLM calls for problems that can't be judged
+        langs = api.get('/api/coding/languages/').data
+        self.assertTrue(all(not lang['available'] for lang in langs))

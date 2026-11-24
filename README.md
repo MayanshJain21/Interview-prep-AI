@@ -71,10 +71,15 @@ Both must be running: the website calls the backend at `http://localhost:8000/ap
 | --- | --- |
 | `GROQ_API_KEY` | Groq key for all AI features |
 | `SECRET_KEY`, `JWT_SECRET` | Django and JWT signing secrets (long random strings) |
-| `CODE_EXECUTOR` | `piston` (sandbox, recommended) or `local` (development only) |
+| `CODE_EXECUTOR` | `piston` (sandbox, recommended), `local` (development only) or `off` (no code runner; the coding round is switched off) |
 | `ALLOW_LOCAL_EXECUTOR` | must be `1` for `local` to run; also requires `DEBUG=True` |
 | `PISTON_URL` | Piston address, default `http://localhost:2000` |
+| `PISTON_TOKEN` | optional; sent as `Authorization: Bearer …` when Piston is on another server behind a reverse proxy |
 | `GOOGLE_CLIENT_ID` | optional; turns on "Continue with Google" on the login page |
+| `DEBUG` | `False` on a live server (default `True` for local development) |
+| `ALLOWED_HOSTS` | live server: the backend's domain, comma-separated (default `*`) |
+| `CORS_ALLOWED_ORIGINS` | live server: the frontend's address, e.g. `https://peakcv.up.railway.app` (default: any) |
+| `DATA_DIR` | where `db.sqlite3` and `chroma_db/` are stored; on Railway, a volume such as `/data` |
 
 Without a Groq key the app still runs: login, the dashboard, the learning path and history work, and AI features
 return a clear "AI service not configured" error.
@@ -101,6 +106,15 @@ official `google-auth` library, then signs the user in or creates the account.
    ```
 4. Install the runtimes you need (python, node, gcc, java, go) through Piston's `POST /api/v2/packages` endpoint.
 5. Set `CODE_EXECUTOR=piston` in `.env`.
+
+### Code runner on Railway (`runner/`)
+
+Railway can't run Piston (it needs privileged Docker), so `runner/` is a small Piston-compatible service for
+Railway. Deploy it as its own service (Root Directory `runner`, built from its Dockerfile, which installs Python,
+Node, gcc/g++, a JDK and Go). It needs a `RUNNER_TOKEN` variable and is reached over Railway's private network.
+Point the backend at it with `CODE_EXECUTOR=piston`, `PISTON_URL=http://<runner-service>.railway.internal:8080` and
+`PISTON_TOKEN` = the same token. Submissions run as an unprivileged user with time, CPU, process, file-size and
+memory limits; the runner has no database, volume or other secrets.
 
 ### Coding-round languages
 
@@ -143,7 +157,7 @@ and reused by later rounds. After each round a few more are prepared in the back
 ## Tests
 
 ```powershell
-python manage.py test          # backend: 87 tests, LLM calls mocked, no API key needed
+python manage.py test          # backend: 90 tests, LLM calls mocked, no API key needed
 cd frontend
 npm test                       # frontend: 8 tests (Vitest + Testing Library)
 npm run lint                   # ESLint
@@ -177,6 +191,7 @@ technical/      technical interview: services/ (plan, ai, session)
 dashboard/      cross-module stats and the score timeline
 frontend/src/   pages/, components/{shared,dashboard,coding,jobs,learning,technical}/, hooks/useSpeech.js,
                 services/part2Api.js, utils/ (validation, skillGroups)
+runner/         Piston-compatible code runner for Railway (Dockerfile + server.py)
 samples/        a sample resume (PDF and HTML) for testing
 ```
 
