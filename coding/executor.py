@@ -137,12 +137,16 @@ class PistonExecutor:
 
     def __init__(self):
         self.url = os.getenv('PISTON_URL', 'http://localhost:2000').rstrip('/')
+        # Piston has no login of its own. When it runs on another server behind a reverse proxy,
+        # the proxy checks this token, so only our backend can run code there.
+        token = os.getenv('PISTON_TOKEN', '').strip()
+        self.headers = {'Authorization': f'Bearer {token}'} if token else {}
 
     def available(self):
         fetched, names = PistonExecutor._runtimes
         if names is None or time.time() - fetched > 300:
             try:
-                resp = requests.get(f'{self.url}/api/v2/runtimes', timeout=3)
+                resp = requests.get(f'{self.url}/api/v2/runtimes', headers=self.headers, timeout=3)
                 names = set()
                 for r in resp.json():
                     names.add(r.get('language'))
@@ -164,7 +168,8 @@ class PistonExecutor:
             'run_memory_limit': 256 * 1024 * 1024,
         }
         try:
-            resp = requests.post(f'{self.url}/api/v2/execute', json=payload, timeout=TIME_LIMIT_SEC + 30)
+            resp = requests.post(f'{self.url}/api/v2/execute', json=payload, headers=self.headers,
+                                 timeout=TIME_LIMIT_SEC + 30)
         except requests.RequestException:
             raise ExecutorError("Can't reach the code runner (Piston). Is the Docker container running?")
         if resp.status_code != 200:
@@ -181,8 +186,23 @@ class PistonExecutor:
                           timed_out, run.get('code') if run.get('code') is not None else -1)
 
 
+class DisabledExecutor:
+    """CODE_EXECUTOR=off: no code runner on this server (e.g. a host without Docker for Piston).
+    The coding round shows a clear message instead of trying to run code."""
+    MESSAGE = "Running code isn't available on this server yet, so the coding round is switched off."
+
+    @classmethod
+    def available(cls):
+        return {lang: 'a code runner on the server' for lang in LocalExecutor.FILES}
+
+    def execute(self, language, source, stdin):
+        raise ExecutorError(self.MESSAGE)
+
+
 def get_executor():
     kind = os.getenv('CODE_EXECUTOR', 'piston').lower()
     if kind == 'local':
         return LocalExecutor()
+    if kind == 'off':
+        return DisabledExecutor()
     return PistonExecutor()

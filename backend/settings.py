@@ -8,9 +8,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+def _env_list(name, default=''):
+    return [x.strip() for x in os.getenv(name, default).split(',') if x.strip()]
+
+
+# Local development needs no settings: DEBUG is on and every host is allowed.
+# On a live server set DEBUG=False and ALLOWED_HOSTS / CORS_ALLOWED_ORIGINS (comma-separated).
+DEBUG = os.getenv('DEBUG', 'True').strip().lower() in ('1', 'true', 'yes')
+
+ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS', '*')
+
+# Where the database and the resume vector store live. On Railway point this at a volume (e.g. /data)
+# so data survives redeploys.
+DATA_DIR = Path(os.getenv('DATA_DIR', str(BASE_DIR)))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -67,7 +79,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DATA_DIR / 'db.sqlite3',
     }
 }
 
@@ -98,7 +110,16 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+# Which websites may call the API. Unset = any (local development).
+CORS_ALLOWED_ORIGINS = _env_list('CORS_ALLOWED_ORIGINS')
+CORS_ALLOW_ALL_ORIGINS = not CORS_ALLOWED_ORIGINS
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS + _env_list('CSRF_TRUSTED_ORIGINS')
+
+if not DEBUG:
+    # Behind Railway's HTTPS proxy.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

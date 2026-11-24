@@ -11,8 +11,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
-from .executor import ExecutorError
+from .executor import DisabledExecutor, ExecutorError
 from .executor import get_executor
+
+
+def get_executor_or_none():
+    try:
+        return get_executor()
+    except ExecutorError:
+        return None
 from . import question_bank
 from .generator import ROUNDS, GenerationError, generate_round
 from .judge import LANGUAGES, PASSED, TIMEOUT, run_tests
@@ -131,6 +138,10 @@ def start_session(request):
     focus_topic = str(request.data.get('topic', '')).strip().lower()[:50]
     if focus_topic and not re.fullmatch(r'[a-z /-]+', focus_topic):
         focus_topic = ''
+
+    # Without a code runner the problems can't be checked or judged, so don't spend LLM calls on them.
+    if isinstance(get_executor_or_none(), DisabledExecutor):
+        return Response({'error': DisabledExecutor.MESSAGE, 'code': 'executor_off'}, status=503)
 
     seen = list(CodingProblem.objects.filter(session__user=request.user)
                 .order_by('-id').values_list('title', flat=True)[:30])
